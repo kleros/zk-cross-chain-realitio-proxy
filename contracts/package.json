@@ -1,0 +1,42 @@
+{
+  "name": "@kleros/cross-chain-realitio-contracts",
+  "version": "0.5.0",
+  "main": "index.js",
+  "author": "Kleros",
+  "license": "MIT",
+  "scripts": {
+    "build": "hardhat compile"
+  },
+  "dependencies": {
+    "@kleros/dispute-resolver-interface-contract": "^8.0.0",
+    "@matterlabs/hardhat-zksync-deploy": "^0.6.3",
+    "@matterlabs/hardhat-zksync-solc": "^0.4.0",
+    "@matterlabs/hardhat-zksync-verify": "^0.2.0",
+    "@matterlabs/zksync-contracts": "^0.6.1",
+    "@nomicfoundation/hardhat-verify": "^1.0.4",
+    "@openzeppelin/contracts": "^4.8.3"
+  },
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.0",
+    "@nomiclabs/hardhat-etherscan": "^3.1.0",
+    "@nomiclabs/hardhat-waffle": "^2.0.0",
+    "@nomiclabs/hardhat-web3": "^2.0.0",
+    "@openzeppelin/test-helpers": "^0.5.6",
+    "chai": "^4.2.0",
+    "ethereum-waffle": "^3.0.0",
+    "ethereumjs-util": "^7.0.7",
+    "ethers": "^5.7.1",
+    "hardhat": "^2.0.2",
+    "hardhat-deploy": "^0.9.0",
+    "hardhat-deploy-ethers": "^0.3.0-beta.7",
+    "mocha": "^8.1.1",
+    "prompts": "^2.4.0",
+    "web3": "^1.4.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.8.4",
+    "zksync-web3": "^0.14.3"
+  },
+  "resolutions": {
+    "**/eslint": "^7.30.0"
+  }
+}

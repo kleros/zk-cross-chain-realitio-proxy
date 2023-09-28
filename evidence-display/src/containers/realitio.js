@@ -30,8 +30,6 @@ class RealitioDisplayInterface extends Component {
     console.log(arbitrableContractAddress);
     const rpcURL = arbitrableJsonRpcUrl || arbitratorJsonRpcUrl || jsonRpcUrl;
     const cid = arbitrableChainID || arbitratorChainID || chainID;
-    // TODO: replace the hardcoded value
-    const fromBlock = 9757046;
 
     if (!rpcURL || !disputeID || !cid) {
       console.error("Evidence display is missing critical information.");
@@ -49,36 +47,13 @@ class RealitioDisplayInterface extends Component {
 
     const realitioContractAddress = await homeProxy.methods.realitio().call();
     const realitio = new homeWeb3.eth.Contract(RealitioInterface.abi, realitioContractAddress);
-    const arbitrationCreatedLogs = await foreignProxy.getPastEvents("ArbitrationCreated", {
-      filter: {
-        _disputeID: disputeID,
-      },
-      fromBlock: fromBlock,
-      toBlock: "latest",
-    });
-
-    if (arbitrationCreatedLogs.length != 1) {
-      return;
-    }
+    const arbitrationCreatedLogs = await getEventLog(foreignProxy, "ArbitrationCreated", { _disputeID: disputeID }, await foreignWeb3.eth.getBlock("latest"));
 
     const questionID = arbitrationCreatedLogs[0].returnValues._questionID;
+    const questionEventLog = await getEventLog(realitio, "LogNewQuestion", { question_id: questionID }, await homeWeb3.eth.getBlock("latest"));
 
-    const questionEventLog = await realitio.getPastEvents("LogNewQuestion", {
-      filter: {
-        question_id: questionID,
-      },
-      fromBlock: fromBlock,
-      toBlock: "latest",
-    });
     const templateID = questionEventLog[0].returnValues.template_id;
-
-    const templateEventLog = await realitio.getPastEvents("LogNewTemplate", {
-      filter: {
-        template_id: templateID,
-      },
-      fromBlock: fromBlock,
-      toBlock: "latest",
-    });
+    const templateEventLog = await getEventLog(realitio, "LogNewTemplate", { template_id: templateID }, await homeWeb3.eth.getBlock("latest"));
 
     console.log(questionEventLog[0].returnValues.question);
     console.log(templateEventLog[0].returnValues.question_text);
@@ -143,6 +118,22 @@ class RealitioDisplayInterface extends Component {
       </div>
     );
   }
+}
+
+async function getEventLog(contract, event, filter, latestBlock) {
+  let result = [];
+  let upperBound = latestBlock;
+  let lowerBound = upperBound - 1000;
+  while (result.length === 0 && upperBound > 0) {
+    result = await contract.getPastEvents(event, {
+      filter: filter,
+      fromBlock: lowerBound,
+      toBlock: upperBound,
+    });
+    upperBound = lowerBound;
+    lowerBound = Math.max(upperBound - 1000, 0);
+  }
+  return result;
 }
 
 export default RealitioDisplayInterface;

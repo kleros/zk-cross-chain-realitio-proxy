@@ -22,7 +22,7 @@ import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./ArbitrationProx
 contract zkRealitioHomeProxy is IHomeArbitrationProxy {
     /// @dev The address of the Realitio contract (v3.0 required). TRUSTED.
     RealitioInterface public immutable realitio;
-    address public foreignProxy; // Address of the proxy on L1 converted to L2. See https://era.zksync.io/docs/api/go/utils.html#applyl1tol2alias
+    address public immutable foreignProxy; // Address of the proxy on L1 converted to L2. See https://era.zksync.io/docs/api/go/utils.html#applyl1tol2alias
 
     /// @dev Metadata for Realitio interface.
     string public override metadata;
@@ -55,21 +55,13 @@ contract zkRealitioHomeProxy is IHomeArbitrationProxy {
     /**
      * @notice Creates an arbitration proxy on the home chain.
      * @param _realitio Realitio contract address.
-     * @param _metadata Metadata for Realitio
-     */
-    constructor(RealitioInterface _realitio, string memory _metadata) {
-        realitio = _realitio;
-        metadata = _metadata;
-    }
-
-    /**
-     * @notice Set foreign proxy if not set already.
      * @param _foreignProxy Alias of the proxy on L1.
+     * @param _metadata Metadata for Realitio.
      */
-    // TODO: move setter to foreign proxy.
-    function setForeignProxy(address _foreignProxy) external {
-        require(foreignProxy == address(0x0), "Foreign proxy is already set");
+    constructor(RealitioInterface _realitio, address _foreignProxy, string memory _metadata) {
+        realitio = _realitio;
         foreignProxy = _foreignProxy;
+        metadata = _metadata;
     }
 
     /**

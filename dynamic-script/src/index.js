@@ -4,10 +4,10 @@ const RealitioHomeArbitrationProxy = require("@kleros/cross-chain-realitio-contr
 const RealitioInterface = require("@kleros/cross-chain-realitio-contracts/artifacts-zk/src/RealitioInterface.sol/RealitioInterface.json");
 const RealitioQuestion = require("@realitio/realitio-lib/formatters/question.js");
 
-// TODO: replace the hardcoded value
-const fromBlock = 9757046;
-
 const isNil = (value) => value === undefined || value === null;
+
+const CONCURRENT_QUERIES = 100;
+const BLOCK_RANGE = 1000;
 
 module.exports = async function getMetaEvidence() {
   const { disputeID, arbitrableContractAddress, arbitrableJsonRpcUrl, arbitratorJsonRpcUrl, jsonRpcUrl } =
@@ -17,6 +17,26 @@ module.exports = async function getMetaEvidence() {
   }
 
   const foreignWeb3 = new Web3(arbitratorJsonRpcUrl || jsonRpcUrl);
+  async function getForeignEventLog(contract, event, filter) {
+    const latestBlockNumber = await foreignWeb3.eth.getBlock("latest").then((block) => block.number);
+    let upperBound = latestBlockNumber;
+    let result = [];
+    while (result.length === 0 && upperBound > 0) {
+      const queries = [];
+      for (let i = 1; i <= CONCURRENT_QUERIES; i++) {
+        queries.push(
+          contract.getPastEvents(event, {
+            filter,
+            fromBlock: Math.max(upperBound - BLOCK_RANGE, 0),
+            toBlock: upperBound,
+          })
+        );
+        upperBound = upperBound - BLOCK_RANGE;
+      }
+      result = await Promise.all(queries).then((results) => results.flat(Infinity));
+    }
+    return result;
+  }
   const foreignProxy = new foreignWeb3.eth.Contract(RealitioForeignArbitrationProxy.abi, arbitrableContractAddress);
 
   const homeWeb3 = new Web3(arbitrableJsonRpcUrl || jsonRpcUrl);
@@ -26,12 +46,8 @@ module.exports = async function getMetaEvidence() {
   );
   const realitio = new homeWeb3.eth.Contract(RealitioInterface.abi, await homeProxy.methods.realitio().call());
 
-  const arbitrationCreatedLogs = await foreignProxy.getPastEvents("ArbitrationCreated", {
-    filter: {
-      _disputeID: disputeID,
-    },
-    fromBlock: fromBlock,
-    toBlock: "latest",
+  const arbitrationCreatedLogs = await getForeignEventLog(foreignProxy, "ArbitrationCreated", {
+    _disputeID: disputeID,
   });
 
   if (arbitrationCreatedLogs.length != 1) {
@@ -39,23 +55,19 @@ module.exports = async function getMetaEvidence() {
   }
 
   const questionID = arbitrationCreatedLogs[0].returnValues._questionID;
-
   const questionEventLog = await realitio.getPastEvents("LogNewQuestion", {
-    filter: {
-      question_id: questionID,
-    },
-    fromBlock: fromBlock,
+    filter: { question_id: questionID },
+    fromBlock: 0,
     toBlock: "latest",
   });
-  const templateID = questionEventLog[0].returnValues.template_id;
 
+  const templateID = questionEventLog[0].returnValues.template_id;
   const templateEventLog = await realitio.getPastEvents("LogNewTemplate", {
-    filter: {
-      template_id: templateID,
-    },
-    fromBlock: fromBlock,
+    filter: { template_id: templateID },
+    fromBlock: 0,
     toBlock: "latest",
   });
+
   const templateText = templateEventLog[0].returnValues.question_text;
   const questionData = RealitioQuestion.populatedJSONForTemplate(
     templateText,

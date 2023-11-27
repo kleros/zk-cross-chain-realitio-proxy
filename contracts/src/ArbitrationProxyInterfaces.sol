@@ -163,11 +163,8 @@ interface IForeignArbitrationProxy {
      * @notice Requests arbitration for the given question and contested answer.
      * @param _questionID The ID of the question.
      * @param _maxPrevious The maximum value of the current bond for the question. The arbitration request will get rejected if the current bond is greater than _maxPrevious. If set to 0, _maxPrevious is ignored.
-     * @param _zkSyncAddress The current address of the zkSync L1 bridge. Currently for Goerli testnet it's 0x1908e2BF4a88F91E4eF0DC72f02b8Ea36BEa2319
-     * @param _l2GasLimit Gas limit of the transaction call.
-     * @param _l2GasPerPubdataByteLimit The current required gas per pubdata for L1->L2 transactions.
      */
-    function requestArbitration(bytes32 _questionID, uint256 _maxPrevious, address _zkSyncAddress, uint256 _l2GasLimit, uint256 _l2GasPerPubdataByteLimit) external payable;
+    function requestArbitration(bytes32 _questionID, uint256 _maxPrevious) external payable;
 
     /**
      * @notice Receives the acknowledgement of the arbitration request for the given question and requester. TRUSTED.
@@ -188,7 +185,7 @@ interface IForeignArbitrationProxy {
      * @param _questionID The ID of the question.
      * @param _requester The address of the arbitration requester.
      */
-    function handleFailedDisputeCreation(bytes32 _questionID, address _requester, address _zkSyncAddress, uint256 _l2GasLimit, uint256 _l2GasPerPubdataByteLimit) external;
+    function handleFailedDisputeCreation(bytes32 _questionID, address _requester) external payable;
 
     /**
      * @notice Gets the fee to create a dispute.

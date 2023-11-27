@@ -7,6 +7,7 @@ require("hardhat-deploy-ethers");
 require("@nomiclabs/hardhat-etherscan");
 require("@matterlabs/hardhat-zksync-deploy");
 require("@matterlabs/hardhat-zksync-solc");
+require('hardhat-contract-sizer');
 //require("@matterlabs/hardhat-zksync-verify");
 
 module.exports = {

@@ -7,6 +7,10 @@ import RealitioInterface from "@kleros/cross-chain-realitio-contracts/artifacts-
 
 import RealityLogo from "../assets/images/reality_eth_logo.png";
 import { populatedJSONForTemplate } from "@reality.eth/reality-eth-lib/formatters/question";
+
+const CONCURRENT_QUERIES = 100;
+const BLOCK_RANGE = 1000;
+
 class RealitioDisplayInterface extends Component {
   state = { question: null };
 
@@ -37,6 +41,26 @@ class RealitioDisplayInterface extends Component {
     }
 
     const foreignWeb3 = new Web3(arbitratorJsonRpcUrl || jsonRpcUrl);
+    async function getForeignEventLog(contract, event, filter) {
+      const latestBlockNumber = await foreignWeb3.eth.getBlock("latest").then((block) => block.number);
+      let upperBound = latestBlockNumber;
+      let result = [];
+      while (result.length === 0 && upperBound > 0) {
+        const queries = [];
+        for (let i = 1; i <= CONCURRENT_QUERIES; i++) {
+          queries.push(
+            contract.getPastEvents(event, {
+              filter,
+              fromBlock: Math.max(upperBound - BLOCK_RANGE, 0),
+              toBlock: upperBound,
+            })
+          );
+          upperBound = upperBound - BLOCK_RANGE;
+        }
+        result = await Promise.all(queries).then((results) => results.flat(Infinity));
+      }
+      return result;
+    }
     const foreignProxy = new foreignWeb3.eth.Contract(RealitioForeignArbitrationProxy.abi, arbitrableContractAddress);
 
     const homeWeb3 = new Web3(arbitrableJsonRpcUrl || jsonRpcUrl);
@@ -47,13 +71,22 @@ class RealitioDisplayInterface extends Component {
 
     const realitioContractAddress = await homeProxy.methods.realitio().call();
     const realitio = new homeWeb3.eth.Contract(RealitioInterface.abi, realitioContractAddress);
-    const arbitrationCreatedLogs = await getEventLog(foreignProxy, "ArbitrationCreated", { _disputeID: disputeID }, await foreignWeb3.eth.getBlock("latest"));
+
+    const arbitrationCreatedLogs = await getForeignEventLog(foreignProxy, "ArbitrationCreated", { _disputeID: disputeID });
 
     const questionID = arbitrationCreatedLogs[0].returnValues._questionID;
-    const questionEventLog = await getEventLog(realitio, "LogNewQuestion", { question_id: questionID }, await homeWeb3.eth.getBlock("latest"));
+    const questionEventLog = await realitio.getPastEvents("LogNewQuestion", {
+      filter: { question_id: questionID },
+      fromBlock: 0,
+      toBlock: "latest",
+    });
 
     const templateID = questionEventLog[0].returnValues.template_id;
-    const templateEventLog = await getEventLog(realitio, "LogNewTemplate", { template_id: templateID }, await homeWeb3.eth.getBlock("latest"));
+    const templateEventLog = await realitio.getPastEvents("LogNewTemplate", {
+      filter: { template_id: templateID },
+      fromBlock: 0,
+      toBlock: "latest",
+    });
 
     console.log(questionEventLog[0].returnValues.question);
     console.log(templateEventLog[0].returnValues.question_text);
@@ -118,22 +151,6 @@ class RealitioDisplayInterface extends Component {
       </div>
     );
   }
-}
-
-async function getEventLog(contract, event, filter, latestBlock) {
-  let result = [];
-  let upperBound = latestBlock;
-  let lowerBound = upperBound - 1000;
-  while (result.length === 0 && upperBound > 0) {
-    result = await contract.getPastEvents(event, {
-      filter: filter,
-      fromBlock: lowerBound,
-      toBlock: upperBound,
-    });
-    upperBound = lowerBound;
-    lowerBound = Math.max(upperBound - 1000, 0);
-  }
-  return result;
 }
 
 export default RealitioDisplayInterface;

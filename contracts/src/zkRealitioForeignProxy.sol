@@ -70,6 +70,8 @@ contract zkRealitioForeignProxy is IForeignArbitrationProxy, IDisputeResolver {
     address public homeProxy; // Proxy on L2.
     uint256 public metaEvidenceUpdates;
 
+    uint256 public surplusAmount; // The amount to add to arbitration fees to cover for zkSync fees. The leftover will be reimbursed. This is required for Realtio UI.
+
     // Multipliers are in basis points.
     uint256 public immutable winnerMultiplier; // Multiplier for calculating the appeal fee that must be paid for the answer that was chosen by the arbitrator in the previous round.
     uint256 public immutable loserMultiplier; // Multiplier for calculating the appeal fee that must be paid for the answer that the arbitrator didn't rule for in the previous round.
@@ -101,6 +103,7 @@ contract zkRealitioForeignProxy is IForeignArbitrationProxy, IDisputeResolver {
      * @param _arbitrator Arbitrator contract address.
      * @param _arbitratorExtraData The extra data used to raise a dispute in the arbitrator.
      * @param _zkSyncAddress The current address of the zkSync L1 bridge.
+     * @param _surplusAmount The surplus amount for zk fees.
      * @param _metaEvidence The URI of the meta evidence file.
      * @param _winnerMultiplier Multiplier for calculating the appeal cost of the winning answer.
      * @param _loserMultiplier Multiplier for calculation the appeal cost of the losing answer.
@@ -110,6 +113,7 @@ contract zkRealitioForeignProxy is IForeignArbitrationProxy, IDisputeResolver {
         IArbitrator _arbitrator,
         bytes memory _arbitratorExtraData,
         IZkSync _zkSyncAddress,
+        uint256 _surplusAmount,
         string memory _metaEvidence,
         uint256 _winnerMultiplier,
         uint256 _loserMultiplier,
@@ -118,6 +122,7 @@ contract zkRealitioForeignProxy is IForeignArbitrationProxy, IDisputeResolver {
         arbitrator = _arbitrator;
         arbitratorExtraData = _arbitratorExtraData;
         zkSyncAddress = _zkSyncAddress;
+        surplusAmount = _surplusAmount;
         winnerMultiplier = _winnerMultiplier;
         loserMultiplier = _loserMultiplier;
         loserAppealPeriodMultiplier = _loserAppealPeriodMultiplier;
@@ -167,6 +172,9 @@ contract zkRealitioForeignProxy is IForeignArbitrationProxy, IDisputeResolver {
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, msg.sender, _maxPrevious);
 
         zkSyncAddress.requestL2Transaction{value: zkGasFee}(homeProxy, 0, data, L2_GAS_LIMIT, L2_GAS_PER_PUB_DATA_BYTE_LIMIT, new bytes[](0), msg.sender);
+
+        uint256 leftoverFee = msg.value - arbitrationCost - zkGasFee;
+        if (leftoverFee > 0) payable(msg.sender).send(leftoverFee); // Sending extra value back to contributor. It is the user's responsibility to accept ETH.
 
         emit ArbitrationRequested(_questionID, msg.sender, _maxPrevious);
     }
@@ -531,8 +539,7 @@ contract zkRealitioForeignProxy is IForeignArbitrationProxy, IDisputeResolver {
     function getDisputeFee(
         bytes32 /* _questionID */
     ) external view override returns (uint256) {
-        // TODO: add surplus amount to cover zkFee.
-        return arbitrator.arbitrationCost(arbitratorExtraData);
+        return arbitrator.arbitrationCost(arbitratorExtraData) + surplusAmount;
     }
 
     /**

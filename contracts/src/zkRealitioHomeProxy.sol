@@ -23,6 +23,8 @@ contract zkRealitioHomeProxy is IHomeArbitrationProxy {
     /// @dev The address of the Realitio contract (v3.0 required). TRUSTED.
     RealitioInterface public immutable realitio;
     address public immutable foreignProxy; // Address of the proxy on L1 converted to L2. See https://era.zksync.io/docs/api/go/utils.html#applyl1tol2alias
+    /// @dev ID of the foreign chain, required for Realitio.
+    bytes32 public immutable foreignChainId;
 
     /// @dev Metadata for Realitio interface.
     string public override metadata;
@@ -55,11 +57,13 @@ contract zkRealitioHomeProxy is IHomeArbitrationProxy {
     /**
      * @notice Creates an arbitration proxy on the home chain.
      * @param _realitio Realitio contract address.
+     * @param _foreignChainId The ID of foreign chain (Goerli/Mainnet).
      * @param _foreignProxy Alias of the proxy on L1.
      * @param _metadata Metadata for Realitio.
      */
-    constructor(RealitioInterface _realitio, address _foreignProxy, string memory _metadata) {
+    constructor(RealitioInterface _realitio, uint256 _foreignChainId, address _foreignProxy, string memory _metadata) {
         realitio = _realitio;
+        foreignChainId = bytes32(_foreignChainId);
         foreignProxy = _foreignProxy;
         metadata = _metadata;
     }

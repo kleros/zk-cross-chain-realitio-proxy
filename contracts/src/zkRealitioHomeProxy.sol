@@ -22,7 +22,8 @@ import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./ArbitrationProx
 contract zkRealitioHomeProxy is IHomeArbitrationProxy {
     /// @dev The address of the Realitio contract (v3.0 required). TRUSTED.
     RealitioInterface public immutable realitio;
-    address public immutable foreignProxy; // Address of the proxy on L1 converted to L2. See https://era.zksync.io/docs/api/go/utils.html#applyl1tol2alias
+    address public immutable foreignProxyAlias; // Address of the proxy on L1 converted to L2. See https://era.zksync.io/docs/api/go/utils.html#applyl1tol2alias
+    address public immutable foreignProxy; // Address of the proxy on L1. Required for Realitio UI.
     /// @dev ID of the foreign chain, required for Realitio.
     bytes32 public immutable foreignChainId;
 
@@ -49,8 +50,8 @@ contract zkRealitioHomeProxy is IHomeArbitrationProxy {
     /// @dev Associates a question ID with the requester who succeeded in requesting arbitration. questionIDToRequester[questionID]
     mapping(bytes32 => address) public questionIDToRequester;
 
-    modifier onlyForeignProxy() {
-        require(msg.sender == foreignProxy, "Can only be called by foreign proxy");
+    modifier onlyForeignProxyAlias() {
+        require(msg.sender == foreignProxyAlias, "Can only be called by foreign proxy");
         _;
     }
 
@@ -58,13 +59,15 @@ contract zkRealitioHomeProxy is IHomeArbitrationProxy {
      * @notice Creates an arbitration proxy on the home chain.
      * @param _realitio Realitio contract address.
      * @param _foreignChainId The ID of foreign chain (Goerli/Mainnet).
-     * @param _foreignProxy Alias of the proxy on L1.
+     * @param _foreignProxy Address of the proxy on L1.
+     * @param _foreignProxyAlias Alias of the proxy on L1.
      * @param _metadata Metadata for Realitio.
      */
-    constructor(RealitioInterface _realitio, uint256 _foreignChainId, address _foreignProxy, string memory _metadata) {
+    constructor(RealitioInterface _realitio, uint256 _foreignChainId, address _foreignProxy, address _foreignProxyAlias, string memory _metadata) {
         realitio = _realitio;
         foreignChainId = bytes32(_foreignChainId);
         foreignProxy = _foreignProxy;
+        foreignProxyAlias = _foreignProxyAlias;
         metadata = _metadata;
     }
 
@@ -78,7 +81,7 @@ contract zkRealitioHomeProxy is IHomeArbitrationProxy {
         bytes32 _questionID,
         address _requester,
         uint256 _maxPrevious
-    ) external override onlyForeignProxy {
+    ) external override onlyForeignProxyAlias {
         Request storage request = requests[_questionID][_requester];
         require(request.status == Status.None, "Request already exists");
 
@@ -158,7 +161,7 @@ contract zkRealitioHomeProxy is IHomeArbitrationProxy {
      * @param _questionID The ID of the question.
      * @param _requester The address of the user that requested arbitration.
      */
-    function receiveArbitrationFailure(bytes32 _questionID, address _requester) external override onlyForeignProxy {
+    function receiveArbitrationFailure(bytes32 _questionID, address _requester) external override onlyForeignProxyAlias {
         Request storage request = requests[_questionID][_requester];
         require(request.status == Status.AwaitingRuling, "Invalid request status");
 
@@ -175,7 +178,7 @@ contract zkRealitioHomeProxy is IHomeArbitrationProxy {
      * @param _questionID The ID of the question.
      * @param _answer The answer from the arbitrator.
      */
-    function receiveArbitrationAnswer(bytes32 _questionID, bytes32 _answer) external override onlyForeignProxy {
+    function receiveArbitrationAnswer(bytes32 _questionID, bytes32 _answer) external override onlyForeignProxyAlias {
         address requester = questionIDToRequester[_questionID];
         Request storage request = requests[_questionID][requester];
         require(request.status == Status.AwaitingRuling, "Invalid request status");

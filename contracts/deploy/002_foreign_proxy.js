@@ -24,7 +24,7 @@ const paramsByChainId = {
   },
 };
 
-const surplus = 10000000000000000; // 0.01 ETH.
+const surplus = ethers.utils.parseUnits("0.01", "ether");
 const winnerMultiplier = 3000;
 const loserMultiplier = 7000;
 const loserAppealPeriodMultiplier = 5000;

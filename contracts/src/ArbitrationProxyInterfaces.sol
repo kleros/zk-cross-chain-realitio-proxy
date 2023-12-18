@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.19;
 
 interface IHomeArbitrationProxy {
     /**
@@ -67,11 +67,7 @@ interface IHomeArbitrationProxy {
      * @param _requester The address of the arbitration requester.
      * @param _maxPrevious The maximum value of the current bond for the question. The arbitration request will get rejected if the current bond is greater than _maxPrevious. If set to 0, _maxPrevious is ignored.
      */
-    function receiveArbitrationRequest(
-        bytes32 _questionID,
-        address _requester,
-        uint256 _maxPrevious
-    ) external;
+    function receiveArbitrationRequest(bytes32 _questionID, address _requester, uint256 _maxPrevious) external;
 
     /**
      * @notice Handles arbitration request after it has been notified to Realitio for a given question.
@@ -156,7 +152,7 @@ interface IForeignArbitrationProxy {
      * @notice Should be emitted when the ruling is relayed to home proxy.
      * @param _questionID The ID of the question with the ruling to relay.
      * @param _ruling Ruling converted into Realitio format.
-     */    
+     */
     event RulingRelayed(bytes32 _questionID, bytes32 _ruling);
 
     /**

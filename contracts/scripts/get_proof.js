@@ -4,8 +4,7 @@ const { getL1MessageSentEvent } = require("../helpers/get_event_properties");
 
 // https://era.zksync.io/docs/dev/how-to/send-message-l2-l1.html
 
-// Input the relevant tx hash.
-const txHash = "0xbefad5cf0625dca966dc507f87f2ba1d0cbd8e63d0faac866128e554113b17f8";
+const txHash = "Input the relevant tx hash";
 
 // TODO: automatically call consumeMessageFromL2
 async function getL2MessageProof(blockNumber, l2Provider, homeProxy, msgHash) {

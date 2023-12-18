@@ -8,18 +8,22 @@
  *  @deployments: []
  */
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.19;
 
 // Importing interfaces and addresses of the system contracts
-import "./zkConstants.sol";
+import "@matterlabs/zksync-contracts/l2/system-contracts/interfaces/IL1Messenger.sol";
 import "./RealitioInterface.sol";
 import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./ArbitrationProxyInterfaces.sol";
 
 /**
- * @title Arbitration proxy for Realitio on the side-chain side (A.K.A. the Home Chain).
- * @dev This contract is meant to be deployed to side-chains in which Reality.eth is deployed.
+ * @title Arbitration proxy for Realitio on L2.
+ * @dev This contract is meant to be deployed to L2 where Reality.eth is deployed.
+ * https://era.zksync.io/docs/dev/how-to/send-message-l2-l1.html
  */
 contract zkRealitioHomeProxy is IHomeArbitrationProxy {
+    // 2^15 offset to avoid collision.
+    IL1Messenger constant L1_MESSENGER_CONTRACT = IL1Messenger(address(0x8000 + 0x08));
+
     /// @dev The address of the Realitio contract (v3.0 required). TRUSTED.
     RealitioInterface public immutable realitio;
     address public immutable foreignProxyAlias; // Address of the proxy on L1 converted to L2. See https://era.zksync.io/docs/api/go/utils.html#applyl1tol2alias
@@ -50,6 +54,7 @@ contract zkRealitioHomeProxy is IHomeArbitrationProxy {
     /// @dev Associates a question ID with the requester who succeeded in requesting arbitration. questionIDToRequester[questionID]
     mapping(bytes32 => address) public questionIDToRequester;
 
+    /// @dev Foreign proxy uses its alias to make calls on L2.
     modifier onlyForeignProxyAlias() {
         require(msg.sender == foreignProxyAlias, "Can only be called by foreign proxy");
         _;
@@ -63,7 +68,13 @@ contract zkRealitioHomeProxy is IHomeArbitrationProxy {
      * @param _foreignProxyAlias Alias of the proxy on L1.
      * @param _metadata Metadata for Realitio.
      */
-    constructor(RealitioInterface _realitio, uint256 _foreignChainId, address _foreignProxy, address _foreignProxyAlias, string memory _metadata) {
+    constructor(
+        RealitioInterface _realitio,
+        uint256 _foreignChainId,
+        address _foreignProxy,
+        address _foreignProxyAlias,
+        string memory _metadata
+    ) {
         realitio = _realitio;
         foreignChainId = bytes32(_foreignChainId);
         foreignProxy = _foreignProxy;
@@ -110,9 +121,7 @@ contract zkRealitioHomeProxy is IHomeArbitrationProxy {
     }
 
     /**
-     * @notice Handles arbitration request after it has been notified to Realitio for a given question.
-     * @dev This method exists because `receiveArbitrationRequest` is called by the zkSync Bridge
-     * and cannot send messages back to it.
+     * @dev Relays arbitration request back to L1 after it has been notified by Realitio for a given question.
      * @param _questionID The ID of the question.
      * @param _requester The address of the user that requested arbitration.
      */
@@ -124,15 +133,13 @@ contract zkRealitioHomeProxy is IHomeArbitrationProxy {
 
         bytes4 selector = IForeignArbitrationProxy.receiveArbitrationAcknowledgement.selector;
         bytes memory data = abi.encodeWithSelector(selector, _questionID, _requester);
-        L1_MESSENGER_CONTRACT.sendToL1(data);
+        sendToL1((data));
 
         emit RequestAcknowledged(_questionID, _requester);
     }
 
     /**
-     * @notice Handles arbitration request after it has been rejected.
-     * @dev This method exists because `receiveArbitrationRequest` is called by the zkSync Bridge
-     * and cannot send messages back to it.
+     * @dev Relays arbitration request back to L1 after it has been rejected.
      * Reasons why the request might be rejected:
      *  - The question does not exist
      *  - The question was not answered yet
@@ -150,7 +157,7 @@ contract zkRealitioHomeProxy is IHomeArbitrationProxy {
 
         bytes4 selector = IForeignArbitrationProxy.receiveArbitrationCancelation.selector;
         bytes memory data = abi.encodeWithSelector(selector, _questionID, _requester);
-        L1_MESSENGER_CONTRACT.sendToL1(data);
+        sendToL1(data);
 
         emit RequestCanceled(_questionID, _requester);
     }
@@ -161,7 +168,10 @@ contract zkRealitioHomeProxy is IHomeArbitrationProxy {
      * @param _questionID The ID of the question.
      * @param _requester The address of the user that requested arbitration.
      */
-    function receiveArbitrationFailure(bytes32 _questionID, address _requester) external override onlyForeignProxyAlias {
+    function receiveArbitrationFailure(
+        bytes32 _questionID,
+        address _requester
+    ) external override onlyForeignProxyAlias {
         Request storage request = requests[_questionID][_requester];
         require(request.status == Status.AwaitingRuling, "Invalid request status");
 
@@ -174,7 +184,7 @@ contract zkRealitioHomeProxy is IHomeArbitrationProxy {
     }
 
     /**
-     * @notice Receives the answer to a specified question. TRUSTED.
+     * @notice Receives an answer to a specified question. TRUSTED.
      * @param _questionID The ID of the question.
      * @param _answer The answer from the arbitrator.
      */
@@ -221,5 +231,9 @@ contract zkRealitioHomeProxy is IHomeArbitrationProxy {
         request.status = Status.Finished;
 
         emit ArbitrationFinished(_questionID);
+    }
+
+    function sendToL1(bytes memory _data) internal virtual {
+        L1_MESSENGER_CONTRACT.sendToL1(_data);
     }
 }

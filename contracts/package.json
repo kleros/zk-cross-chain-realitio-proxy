@@ -7,9 +7,9 @@
   "scripts": {
     "build": "hardhat compile",
     "size": "hardhat size-contracts",
-    "deploy:staging": "hardhat compile && hardhat deploy-zksync --script \\deploy\\001_home_proxy.js --network zkSyncGoerli && hardhat run .\\deploy\\002_foreign_proxy.js --network goerli",
+    "deploy:staging": "hardhat compile && hardhat deploy-zksync --script \\deploy\\001_home_proxy.js --network zkSyncSepolia && hardhat run .\\deploy\\002_foreign_proxy.js --network sepolia",
     "deploy-production": "hardhat compile && hardhat deploy-zksync --script \\deploy\\001_home_proxy.js --network zkSyncMainnet && hardhat run .\\deploy\\002_foreign_proxy.js --network mainnet",
-    "proof:staging": "hardhat run .\\scripts\\get_proof.js --network zkSyncGoerli",
+    "proof:staging": "hardhat run .\\scripts\\get_proof.js --network zkSyncSepolia",
     "proof:production": "hardhat run .\\scripts\\get_proof.js --network zkSyncMainnet",
     "test": "hardhat test"
   },

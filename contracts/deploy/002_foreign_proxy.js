@@ -13,7 +13,7 @@ const paramsByChainId = {
     arbitratorExtraData:
       "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
     zkAddress: "0x9A6DE0f62Aa270A8bCB1e2610078650D539B1Ef9",
-    metaEvidence: "TODO", // Need to reupload with different chain ids.
+    metaEvidence: "/ipfs/QmUWbqopqmdJhabN1WpUMXse6TzTdUiM6TF95FQnP4AonY/realitio.json",
   },
   1: {
     arbitrator: "0x988b3a538b618c7a603e1c11ab82cd16dbe28069", // KlerosLiquid address

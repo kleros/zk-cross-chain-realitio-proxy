@@ -12,6 +12,10 @@ const paramsByChainId = {
     realitio: "0xA8AC760332770FcF2056040B1f964750e4bEf808",
     foreignChainId: 1,
   },
+  300: {
+    realitio: "0x4E346436e99fb7d6567A2bd024d8806Fc10d84D2",
+    foreignChainId: 11155111,
+  }
 };
 const metadata =
   '{"tos":"ipfs://QmNV5NWwCudYKfiHuhdWxccrPyxs4DnbLGQace2oMKHkZv/Question_Resolution_Policy.pdf", "foreignProxy":true}'; // Same for all chains.
@@ -22,6 +26,7 @@ module.exports = async function () {
   const { providers } = ethers;
   const foreignNetworks = {
     280: hre.config.networks.goerli,
+    300: hre.config.networks.sepolia,
     324: hre.config.networks.mainnet,
   };
 

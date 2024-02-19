@@ -9,6 +9,14 @@ require("@matterlabs/hardhat-zksync-solc");
 require('hardhat-contract-sizer');
 require("@matterlabs/hardhat-zksync-verify");
 
+const getProof = require("./tasks/get_proof.js");
+
+task("getProof", "Obtain a proof and send it to L2")
+  .addParam("txhash", "The transaction hash")
+  .setAction(async (taskArgs) => {
+    await getProof(taskArgs.txhash);
+  });
+
 module.exports = {
   solidity: {
     version: "0.8.19",

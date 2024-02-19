@@ -1,5 +1,3 @@
-const { ethers, network } = require("hardhat");
-
 async function getL1MessageSentEvent(transactionHash, contractInterface, provider) {
   const receipt = await provider.getTransactionReceipt(transactionHash);
 

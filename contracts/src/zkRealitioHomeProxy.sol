@@ -21,7 +21,7 @@ import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./ArbitrationProx
  * https://era.zksync.io/docs/dev/how-to/send-message-l2-l1.html
  */
 contract zkRealitioHomeProxy is IHomeArbitrationProxy {
-    // 2^15 offset to avoid collision.
+    // 2^15 offset to avoid collision. Taken from zk system contract https://github.com/matter-labs/v2-testnet-contracts/blob/b8449bf9c819098cc8bfee0549ff5094456be51d/l2/system-contracts/Constants.sol#L18
     IL1Messenger constant L1_MESSENGER_CONTRACT = IL1Messenger(address(0x8000 + 0x08));
 
     /// @dev The address of the Realitio contract (v3.0 required). TRUSTED.

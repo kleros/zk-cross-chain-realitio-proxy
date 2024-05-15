@@ -133,7 +133,7 @@ contract zkRealitioHomeProxy is IHomeArbitrationProxy {
 
         bytes4 selector = IForeignArbitrationProxy.receiveArbitrationAcknowledgement.selector;
         bytes memory data = abi.encodeWithSelector(selector, _questionID, _requester);
-        sendToL1((data));
+        sendToL1(data);
 
         emit RequestAcknowledged(_questionID, _requester);
     }

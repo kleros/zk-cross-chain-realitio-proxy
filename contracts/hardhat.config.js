@@ -9,14 +9,6 @@ require("@matterlabs/hardhat-zksync-solc");
 require('hardhat-contract-sizer');
 require("@matterlabs/hardhat-zksync-verify");
 
-const getProof = require("./tasks/get_proof.js");
-
-task("getProof", "Obtain a proof and send it to L2")
-  .addParam("txhash", "The transaction hash")
-  .setAction(async (taskArgs) => {
-    await getProof(taskArgs.txhash);
-  });
-
 module.exports = {
   solidity: {
     version: "0.8.19",
@@ -37,6 +29,8 @@ module.exports = {
   networks: {
     hardhat: {
       blockGasLimit: 100000000000,
+      // Enable zkSync only if not in a test environment. We need this flag to create zk artifacts. For tests the ordinary artifacts will be used for both proxies.
+      zksync: !process.env.TEST_ENV,
     },
     zkSyncGoerli: {
       url: "https://testnet.era.zksync.dev",

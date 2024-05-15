@@ -9,9 +9,9 @@
     "size": "hardhat size-contracts",
     "deploy:staging": "hardhat compile && hardhat deploy-zksync --script \\deploy\\001_home_proxy.js --network zkSyncSepolia && hardhat run .\\deploy\\002_foreign_proxy.js --network sepolia",
     "deploy-production": "hardhat compile && hardhat deploy-zksync --script \\deploy\\001_home_proxy.js --network zkSyncMainnet && hardhat run .\\deploy\\002_foreign_proxy.js --network mainnet",
-    "proof:staging": "hardhat getProof --network zkSyncSepolia",
-    "proof:production": "hardhat getProof --network zkSyncMainnet",
-    "test": "hardhat test"
+    "proof:staging": "hardhat run .\\scripts\\execute_proof.js --network zkSyncSepolia",
+    "proof:production": "hardhat run .\\scripts\\execute_proof.js --network zkSyncMainnet",
+    "test": "set TEST_ENV=true && hardhat test"
   },
   "dependencies": {
     "@kleros/dispute-resolver-interface-contract": "^8.0.0",

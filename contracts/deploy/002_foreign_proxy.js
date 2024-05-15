@@ -13,7 +13,7 @@ const paramsByChainId = {
     arbitratorExtraData:
       "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
     zkAddress: "0x9A6DE0f62Aa270A8bCB1e2610078650D539B1Ef9",
-    metaEvidence: "/ipfs/QmUWbqopqmdJhabN1WpUMXse6TzTdUiM6TF95FQnP4AonY/realitio.json",
+    metaEvidence: "/ipfs/QmZjtv9jTbykD39z8U7ZAmZ3mvRw7J6etKohgJBS5Nmxm5/metaevidence.json",
   },
   1: {
     arbitrator: "0x988b3a538b618c7a603e1c11ab82cd16dbe28069", // KlerosLiquid address
@@ -24,21 +24,32 @@ const paramsByChainId = {
   },
 };
 
-const surplus = ethers.utils.parseUnits("0.01", "ether");
+const surplus = ethers.utils.parseUnits("0.05", "ether");
 const winnerMultiplier = 3000;
 const loserMultiplier = 7000;
 const loserAppealPeriodMultiplier = 5000;
+const l2GasLimit = 1500000;
+const l2GasPerPubdataByteLimit = 800;
 
 async function main() {
   console.log("Starting foreign proxy deployment..");
   const chainId = hre.network.config.chainId;
   const { arbitrator, arbitratorExtraData, zkAddress, metaEvidence } = paramsByChainId[chainId];
+  let governor;
+  if (chainId === 1) {
+    governor = "TODO"; // Determine later
+  } else {
+    governor = (await ethers.getSigners())[0].address;
+  }
 
   const ForeignProxy = await ethers.getContractFactory("zkRealitioForeignProxy");
   const foreignProxy = await ForeignProxy.deploy(
+    governor,
     arbitrator,
     arbitratorExtraData,
     zkAddress,
+    l2GasLimit,
+    l2GasPerPubdataByteLimit,
     surplus,
     metaEvidence,
     winnerMultiplier,

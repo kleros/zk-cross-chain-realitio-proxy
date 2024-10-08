@@ -67,7 +67,7 @@ module.exports = async function getMetaEvidence() {
   // reality spec is acceptable (only for Seer)
   const templateText = ['{"title": "%s", "type": "bool", "category": "%s", "lang": "%s"}',
     '{"title": "%s", "type": "uint", "decimals": 18, "category": "%s", "lang": "%s"}',
-    '"title": "%s", "type": "single-select", "outcomes": [%s], "category": "%s", "lang": "%s"}',
+    '{"title": "%s", "type": "single-select", "outcomes": [%s], "category": "%s", "lang": "%s"}',
     '{"title": "%s", "type": "multiple-select", "outcomes": [%s], "category": "%s", "lang": "%s"}',
     '{"title": "%s", "type": "datetime", "category": "%s", "lang": "%s"}'][templateID]
 

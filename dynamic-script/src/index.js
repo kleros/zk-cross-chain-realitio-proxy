@@ -62,13 +62,15 @@ module.exports = async function getMetaEvidence() {
   });
 
   const templateID = questionEventLog[0].returnValues.template_id;
-  const templateEventLog = await realitio.getPastEvents("LogNewTemplate", {
-    filter: { template_id: templateID },
-    fromBlock: 0,
-    toBlock: "latest",
-  });
 
-  const templateText = templateEventLog[0].returnValues.question_text;
+  // seer only uses templates 1, 2 and 3, so hardcoding the templates that are part of the
+  // reality spec is acceptable (only for Seer)
+  const templateText = ['{"title": "%s", "type": "bool", "category": "%s", "lang": "%s"}',
+    '{"title": "%s", "type": "uint", "decimals": 18, "category": "%s", "lang": "%s"}',
+    '{"title": "%s", "type": "single-select", "outcomes": [%s], "category": "%s", "lang": "%s"}',
+    '{"title": "%s", "type": "multiple-select", "outcomes": [%s], "category": "%s", "lang": "%s"}',
+    '{"title": "%s", "type": "datetime", "category": "%s", "lang": "%s"}'][templateID]
+
   const questionData = RealitioQuestion.populatedJSONForTemplate(
     templateText,
     questionEventLog[0].returnValues.question

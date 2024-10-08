@@ -82,18 +82,21 @@ class RealitioDisplayInterface extends Component {
     });
 
     const templateID = questionEventLog[0].returnValues.template_id;
-    const templateEventLog = await realitio.getPastEvents("LogNewTemplate", {
-      filter: { template_id: templateID },
-      fromBlock: 0,
-      toBlock: "latest",
-    });
+
+    // seer only uses templates 1, 2 and 3, so hardcoding the templates that are part of the
+    // reality spec is acceptable (only for Seer)
+    const templateText = ['{"title": "%s", "type": "bool", "category": "%s", "lang": "%s"}',
+      '{"title": "%s", "type": "uint", "decimals": 18, "category": "%s", "lang": "%s"}',
+      '{"title": "%s", "type": "single-select", "outcomes": [%s], "category": "%s", "lang": "%s"}',
+      '{"title": "%s", "type": "multiple-select", "outcomes": [%s], "category": "%s", "lang": "%s"}',
+      '{"title": "%s", "type": "datetime", "category": "%s", "lang": "%s"}'][templateID]
 
     console.log(questionEventLog[0].returnValues.question);
-    console.log(templateEventLog[0].returnValues.question_text);
+    console.log(templateText);
     console.log(
       populatedJSONForTemplate(
         questionEventLog[0].returnValues.question,
-        templateEventLog[0].returnValues.question_text
+        templateText
       )
     );
     this.setState({
@@ -101,7 +104,7 @@ class RealitioDisplayInterface extends Component {
       chainID: cid,
       realitioContractAddress,
       rawQuestion: questionEventLog[0].returnValues.question,
-      rawTemplate: templateEventLog[0].returnValues.question_text,
+      rawTemplate: templateText,
     });
   }
 

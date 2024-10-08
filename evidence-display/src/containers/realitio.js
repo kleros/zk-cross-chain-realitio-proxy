@@ -82,10 +82,12 @@ class RealitioDisplayInterface extends Component {
     });
 
     const templateID = questionEventLog[0].returnValues.template_id;
+
+    const templateCreationBlock = await realitio.methods.templates(templateID).call();
     const templateEventLog = await realitio.getPastEvents("LogNewTemplate", {
       filter: { template_id: templateID },
-      fromBlock: 0,
-      toBlock: "latest",
+      fromBlock: parseInt(templateCreationBlock),
+      toBlock: parseInt(templateCreationBlock),
     });
 
     console.log(questionEventLog[0].returnValues.question);

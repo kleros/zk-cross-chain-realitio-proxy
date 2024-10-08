@@ -62,10 +62,12 @@ module.exports = async function getMetaEvidence() {
   });
 
   const templateID = questionEventLog[0].returnValues.template_id;
+
+  const templateCreationBlock = await realitio.methods.templates(templateID).call();
   const templateEventLog = await realitio.getPastEvents("LogNewTemplate", {
     filter: { template_id: templateID },
-    fromBlock: 0,
-    toBlock: "latest",
+    fromBlock: parseInt(templateCreationBlock),
+    toBlock: parseInt(templateCreationBlock),
   });
 
   const templateText = templateEventLog[0].returnValues.question_text;

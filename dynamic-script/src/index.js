@@ -62,15 +62,24 @@ module.exports = async function getMetaEvidence() {
   });
 
   const templateID = questionEventLog[0].returnValues.template_id;
+  let templateText
+  if (templateID < 5) {
+    // first 5 templates are part of reality.eth spec, hardcode for faster loading
+    templateText = ['{"title": "%s", "type": "bool", "category": "%s", "lang": "%s"}',
+      '{"title": "%s", "type": "uint", "decimals": 18, "category": "%s", "lang": "%s"}',
+      '{"title": "%s", "type": "single-select", "outcomes": [%s], "category": "%s", "lang": "%s"}',
+      '{"title": "%s", "type": "multiple-select", "outcomes": [%s], "category": "%s", "lang": "%s"}',
+      '{"title": "%s", "type": "datetime", "category": "%s", "lang": "%s"}'][templateID]
+  } else {
+    const templateCreationBlock = await realitio.methods.templates(templateID).call();
+    const templateEventLog = await realitio.getPastEvents("LogNewTemplate", {
+      filter: { template_id: templateID },
+      fromBlock: parseInt(templateCreationBlock),
+      toBlock: parseInt(templateCreationBlock),
+    });
+    templateText = templateEventLog[0].returnValues.question_text;
+  }
 
-  const templateCreationBlock = await realitio.methods.templates(templateID).call();
-  const templateEventLog = await realitio.getPastEvents("LogNewTemplate", {
-    filter: { template_id: templateID },
-    fromBlock: parseInt(templateCreationBlock),
-    toBlock: parseInt(templateCreationBlock),
-  });
-
-  const templateText = templateEventLog[0].returnValues.question_text;
   const questionData = RealitioQuestion.populatedJSONForTemplate(
     templateText,
     questionEventLog[0].returnValues.question

@@ -85,7 +85,7 @@ contract zkRealitioForeignProxy is IForeignArbitrationProxy, IDisputeResolver {
     mapping(address => mapping(uint256 => DisputeDetails)) public arbitratorDisputeIDToDisputeDetails; // Maps external dispute ids from a particular arbitrator to local arbitration ID and requester who was able to complete the arbitration request.
     mapping(uint256 => bool) public arbitrationIDToDisputeExists; // Whether a dispute has already been created for the given arbitration ID or not.
     mapping(uint256 => address) public arbitrationIDToRequester; // Maps arbitration ID to the requester who was able to complete the arbitration request.
-
+    mapping(uint256 => uint256) public arbitrationCreatedBlock; // Block of dispute creation.
     mapping(uint256 => mapping(uint256 => bool)) public isL2ToL1MessageProcessed; // Is used to indicate that zkSync L2 to L1 message was already processed. isL2ToL1MessageProcessed[l2BlockNumber][messageNumber]
 
     /**
@@ -343,6 +343,7 @@ contract zkRealitioForeignProxy is IForeignArbitrationProxy, IDisputeResolver {
 
                 arbitrationIDToDisputeExists[arbitrationID] = true;
                 arbitrationIDToRequester[arbitrationID] = _requester;
+                arbitrationCreatedBlock[disputeID] = block.timestamp;
 
                 // At this point, arbitration.deposit is guaranteed to be greater than or equal to the arbitration cost.
                 uint256 remainder = arbitration.deposit - arbitrationCost;

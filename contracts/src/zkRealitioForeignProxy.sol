@@ -343,7 +343,7 @@ contract zkRealitioForeignProxy is IForeignArbitrationProxy, IDisputeResolver {
 
                 arbitrationIDToDisputeExists[arbitrationID] = true;
                 arbitrationIDToRequester[arbitrationID] = _requester;
-                arbitrationCreatedBlock[disputeID] = block.timestamp;
+                arbitrationCreatedBlock[disputeID] = block.number;
 
                 // At this point, arbitration.deposit is guaranteed to be greater than or equal to the arbitration cost.
                 uint256 remainder = arbitration.deposit - arbitrationCost;

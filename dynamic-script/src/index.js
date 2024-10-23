@@ -70,7 +70,9 @@ module.exports = async function getMetaEvidence() {
   const questionID = arbitrationCreatedLogs[0].returnValues._questionID;
   const questionEventLog = await realitio.getPastEvents("LogNewQuestion", {
     filter: { question_id: questionID },
-    fromBlock: REALITY_STARTS_AT[realitioContractAddress.toLowerCase()] ?? 0,
+    fromBlock: Object.keys(REALITY_STARTS_AT).includes(realitioContractAddress.toLowerCase())
+      ? REALITY_STARTS_AT[realitioContractAddress.toLowerCase()]
+      : 0,
     toBlock: "latest",
   });
 

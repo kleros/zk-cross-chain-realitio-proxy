@@ -17,7 +17,7 @@ import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./ArbitrationProx
 /**
  * @title Arbitration proxy for Realitio on Ethereum side (A.K.A. the Foreign Chain).
  * @dev This contract is meant to be deployed to the Ethereum chains where Kleros is deployed.
- * https://era.zksync.io/docs/dev/how-to/send-transaction-l1-l2.html
+ * https://docs.zksync.io/build/developer-reference/l1-l2-interoperability
  */
 contract zkRealitioForeignProxy is IForeignArbitrationProxy, IDisputeResolver {
     /* Constants */
@@ -73,7 +73,7 @@ contract zkRealitioForeignProxy is IForeignArbitrationProxy, IDisputeResolver {
     address public homeProxy; // Proxy on L2.
 
     uint256 public l2GasLimit; // Gas limit of the transaction call. Note some L2 operations consume up to 700000 gas. Default value is 1500000
-    uint256 public l2GasPerPubdataByteLimit; // L2 gas price for each published L1 calldata byte. Current default value is 800 https://era.zksync.io/docs/api/js/utils.html#gas
+    uint256 public l2GasPerPubdataByteLimit; // L2 gas price for each published L1 calldata byte. Current default value is 800 https://docs.zksync.io/build/developer-reference/fee-model/how-l2-gas-price-works#note-on-l1l2-transactions
     uint256 public surplusAmount; // The amount to add to arbitration fees to cover for zkSync fees. The leftover will be reimbursed. This is required for Realtio UI. Default value is 0.05 Eth.
 
     // Multipliers are in basis points.
@@ -291,7 +291,6 @@ contract zkRealitioForeignProxy is IForeignArbitrationProxy, IDisputeResolver {
 
     /**
      * @notice Proves that the message was sent on L2.
-     * @dev See https://era.zksync.io/docs/dev/how-to/send-message-l2-l1.html#send-a-message for more information.
      * @param _l2BlockNumber zkSync block number in which the message was sent
      * @param _index Message index, that can be received via API
      * @param _l2TxNumberInBlock The tx number in block.
@@ -331,6 +330,7 @@ contract zkRealitioForeignProxy is IForeignArbitrationProxy, IDisputeResolver {
         ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
 
+        // Arbitration cost can possibly change between when the request has been made and received, so evaluate once more.
         uint256 arbitrationCost = arbitration.arbitrator.arbitrationCost(arbitration.arbitratorExtraData);
 
         if (arbitration.deposit >= arbitrationCost) {
@@ -811,7 +811,7 @@ contract zkRealitioForeignProxy is IForeignArbitrationProxy, IDisputeResolver {
     }
 
     /**
-     * @notice Gets the required fee for sending tx to L2. https://era.zksync.io/docs/dev/how-to/estimate-gas.html#l1-to-l2
+     * @notice Gets the required fee for sending tx to L2.
      * @return zkGasFee Required fee.
      */
     function getZkGasFee() private view returns (uint256 zkGasFee) {

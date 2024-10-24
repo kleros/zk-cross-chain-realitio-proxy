@@ -8,9 +8,6 @@ import RealitioInterface from "@kleros/cross-chain-realitio-contracts/artifacts-
 import RealityLogo from "../assets/images/reality_eth_logo.png";
 import { populatedJSONForTemplate } from "@reality.eth/reality-eth-lib/formatters/question";
 
-const CONCURRENT_QUERIES = 20;
-const BLOCK_RANGE = 1000;
-
 const REALITY_STARTS_AT = {
   "0x325a2e0f3cca2ddbaebb4dfc38df8d19ca165b47": 6531265, // Reality 2.0 Mainnet
   "0x5b7dd1e86623548af054a4985f7fc8ccbb554e2c": 13194676, // Reality 3.0 Mainnet
@@ -24,8 +21,8 @@ const REALITY_STARTS_AT = {
   "0xA8AC760332770FcF2056040B1f964750e4bEf808": 9691, // Reality 3.0 zkSyncMain
   "0xeAD0ca922390a5E383A9D5Ba4366F7cfdc6f0dbA": 14341474, // Reality 3.0 OptimismSepolia
   "0xc716c23D75f523eF0C511456528F2A1980256a87": 3034954, // Reality 3.0 Redstone
-  "0x1E732a1C5e9181622DD5A931Ec6801889ce66185": 10438389 // Realitiy 3.0 Chiado
-}
+  "0x1E732a1C5e9181622DD5A931Ec6801889ce66185": 10438389, // Realitiy 3.0 Chiado
+};
 
 class RealitioDisplayInterface extends Component {
   state = { question: null };
@@ -57,26 +54,6 @@ class RealitioDisplayInterface extends Component {
     }
 
     const foreignWeb3 = new Web3(arbitratorJsonRpcUrl || jsonRpcUrl);
-    async function getForeignEventLog(contract, event, filter) {
-      const latestBlockNumber = await foreignWeb3.eth.getBlock("latest").then((block) => block.number);
-      let upperBound = latestBlockNumber;
-      let result = [];
-      while (result.length === 0 && upperBound > 0) {
-        const queries = [];
-        for (let i = 1; i <= CONCURRENT_QUERIES; i++) {
-          queries.push(
-            contract.getPastEvents(event, {
-              filter,
-              fromBlock: Math.max(upperBound - BLOCK_RANGE, 0),
-              toBlock: upperBound,
-            })
-          );
-          upperBound = upperBound - BLOCK_RANGE;
-        }
-        result = await Promise.all(queries).then((results) => results.flat(Infinity));
-      }
-      return result;
-    }
     const foreignProxy = new foreignWeb3.eth.Contract(RealitioForeignArbitrationProxy.abi, arbitrableContractAddress);
 
     const homeWeb3 = new Web3(arbitrableJsonRpcUrl || jsonRpcUrl);
@@ -88,11 +65,11 @@ class RealitioDisplayInterface extends Component {
     const realitioContractAddress = await homeProxy.methods.realitio().call();
     const realitio = new homeWeb3.eth.Contract(RealitioInterface.abi, realitioContractAddress);
 
-    const blocknumber = await foreignProxy.methods.arbitrationCreatedBlock(disputeID).call();
+    const arbitrationCreatedBlock = await foreignProxy.methods.arbitrationCreatedBlock(disputeID).call();
     const arbitrationCreatedLogs = await foreignProxy.getPastEvents("ArbitrationCreated", {
       filter: { _disputeID: disputeID },
-      fromBlock: parseInt(blocknumber),
-      toBlock: parseInt(blocknumber)
+      fromBlock: parseInt(arbitrationCreatedBlock),
+      toBlock: parseInt(arbitrationCreatedBlock),
     });
 
     if (arbitrationCreatedLogs.length != 1) {
@@ -103,20 +80,22 @@ class RealitioDisplayInterface extends Component {
     const questionEventLog = await realitio.getPastEvents("LogNewQuestion", {
       filter: { question_id: questionID },
       fromBlock: Object.keys(REALITY_STARTS_AT).includes(realitioContractAddress.toLowerCase())
-      ? REALITY_STARTS_AT[realitioContractAddress.toLowerCase()]
-      : 0,
+        ? REALITY_STARTS_AT[realitioContractAddress.toLowerCase()]
+        : 0,
       toBlock: "latest",
     });
 
     const templateID = questionEventLog[0].returnValues.template_id;
-    let templateText
+    let templateText;
     if (templateID < 5) {
       // first 5 templates are part of reality.eth spec, hardcode for faster loading
-      templateText = ['{"title": "%s", "type": "bool", "category": "%s", "lang": "%s"}',
+      templateText = [
+        '{"title": "%s", "type": "bool", "category": "%s", "lang": "%s"}',
         '{"title": "%s", "type": "uint", "decimals": 18, "category": "%s", "lang": "%s"}',
         '{"title": "%s", "type": "single-select", "outcomes": [%s], "category": "%s", "lang": "%s"}',
         '{"title": "%s", "type": "multiple-select", "outcomes": [%s], "category": "%s", "lang": "%s"}',
-        '{"title": "%s", "type": "datetime", "category": "%s", "lang": "%s"}'][templateID]
+        '{"title": "%s", "type": "datetime", "category": "%s", "lang": "%s"}',
+      ][templateID];
     } else {
       const templateCreationBlock = await realitio.methods.templates(templateID).call();
       const templateEventLog = await realitio.getPastEvents("LogNewTemplate", {
@@ -129,12 +108,7 @@ class RealitioDisplayInterface extends Component {
 
     console.log(questionEventLog[0].returnValues.question);
     console.log(templateText);
-    console.log(
-      populatedJSONForTemplate(
-        questionEventLog[0].returnValues.question,
-        templateText
-      )
-    );
+    console.log(populatedJSONForTemplate(questionEventLog[0].returnValues.question, templateText));
     this.setState({
       questionID,
       chainID: cid,

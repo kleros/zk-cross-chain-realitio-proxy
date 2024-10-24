@@ -72,10 +72,6 @@ class RealitioDisplayInterface extends Component {
       toBlock: parseInt(arbitrationCreatedBlock),
     });
 
-    if (arbitrationCreatedLogs.length != 1) {
-      return rejectScript("Could not find the dispute");
-    }
-
     const questionID = arbitrationCreatedLogs[0].returnValues._questionID;
     const questionEventLog = await realitio.getPastEvents("LogNewQuestion", {
       filter: { question_id: questionID },

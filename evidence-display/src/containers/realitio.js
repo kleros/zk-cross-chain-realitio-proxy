@@ -11,6 +11,17 @@ import { populatedJSONForTemplate } from "@reality.eth/reality-eth-lib/formatter
 const CONCURRENT_QUERIES = 100;
 const BLOCK_RANGE = 1000;
 
+const REALITY_STARTS_AT = {
+  "0x325a2e0f3cca2ddbaebb4dfc38df8d19ca165b47": 6531265,
+  "0x5b7dd1e86623548af054a4985f7fc8ccbb554e2c": 13194676,
+  "0x79e32ae03fb27b07c89c0c568f80287c01ca2e57": 14005802,
+  "0xe78996a233895be74a66f451f1019ca9734205cc": 17997262,
+  "0x60573b8dce539ae5bf9ad7932310668997ef0428": 18901674,
+  "0x5d18bd4dc5f1ac8e9bd9b666bd71cb35a327c4a9": 459975,
+  "0xd3312b4e9225626f8e9a483e2a87bb3966a89f3a": 4012956,
+  "0xaf33dcb6e8c5c4d9ddf579f53031b514d19449ca": 3044431
+}
+
 class RealitioDisplayInterface extends Component {
   state = { question: null };
 
@@ -77,23 +88,37 @@ class RealitioDisplayInterface extends Component {
     const questionID = arbitrationCreatedLogs[0].returnValues._questionID;
     const questionEventLog = await realitio.getPastEvents("LogNewQuestion", {
       filter: { question_id: questionID },
-      fromBlock: 0,
+    fromBlock: Object.keys(REALITY_STARTS_AT).includes(realitioContractAddress.toLowerCase())
+      ? REALITY_STARTS_AT[realitioContractAddress.toLowerCase()]
+      : 0,
       toBlock: "latest",
     });
 
     const templateID = questionEventLog[0].returnValues.template_id;
-    const templateEventLog = await realitio.getPastEvents("LogNewTemplate", {
-      filter: { template_id: templateID },
-      fromBlock: 0,
-      toBlock: "latest",
-    });
+    let templateText
+    if (templateID < 5) {
+      // first 5 templates are part of reality.eth spec, hardcode for faster loading
+      templateText = ['{"title": "%s", "type": "bool", "category": "%s", "lang": "%s"}',
+        '{"title": "%s", "type": "uint", "decimals": 18, "category": "%s", "lang": "%s"}',
+        '{"title": "%s", "type": "single-select", "outcomes": [%s], "category": "%s", "lang": "%s"}',
+        '{"title": "%s", "type": "multiple-select", "outcomes": [%s], "category": "%s", "lang": "%s"}',
+        '{"title": "%s", "type": "datetime", "category": "%s", "lang": "%s"}'][templateID]
+    } else {
+      const templateCreationBlock = await realitio.methods.templates(templateID).call();
+      const templateEventLog = await realitio.getPastEvents("LogNewTemplate", {
+        filter: { template_id: templateID },
+        fromBlock: parseInt(templateCreationBlock),
+        toBlock: parseInt(templateCreationBlock),
+      });
+      templateText = templateEventLog[0].returnValues.question_text;
+    }
 
     console.log(questionEventLog[0].returnValues.question);
-    console.log(templateEventLog[0].returnValues.question_text);
+    console.log(templateText);
     console.log(
       populatedJSONForTemplate(
         questionEventLog[0].returnValues.question,
-        templateEventLog[0].returnValues.question_text
+        templateText
       )
     );
     this.setState({
@@ -101,7 +126,7 @@ class RealitioDisplayInterface extends Component {
       chainID: cid,
       realitioContractAddress,
       rawQuestion: questionEventLog[0].returnValues.question,
-      rawTemplate: templateEventLog[0].returnValues.question_text,
+      rawTemplate: templateText,
     });
   }
 

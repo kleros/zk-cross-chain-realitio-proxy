@@ -24,7 +24,7 @@ const paramsByChainId = {
   },
 };
 
-const surplus = ethers.utils.parseUnits("0.05", "ether");
+const surplus = ethers.utils.parseUnits("0.03", "ether"); // The surplus will be automatically reimbursed when the dispute is created.
 const winnerMultiplier = 3000;
 const loserMultiplier = 7000;
 const loserAppealPeriodMultiplier = 5000;

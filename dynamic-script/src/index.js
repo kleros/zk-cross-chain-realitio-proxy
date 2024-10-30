@@ -96,9 +96,6 @@ module.exports = async function getMetaEvidence() {
         rulingOptions: {
           type: "single-select",
           titles: ["No", "Yes"],
-          reserved: {
-            "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF": "Answered Too Soon",
-          },
         },
       });
     case "uint":
@@ -107,9 +104,6 @@ module.exports = async function getMetaEvidence() {
         rulingOptions: {
           type: "uint",
           precision: questionData.decimals,
-          reserved: {
-            "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF": "Answered Too Soon",
-          },
         },
       });
     case "single-select":
@@ -118,9 +112,6 @@ module.exports = async function getMetaEvidence() {
         rulingOptions: {
           type: "single-select",
           titles: questionData.outcomes,
-          reserved: {
-            "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF": "Answered Too Soon",
-          },
         },
       });
     case "multiple-select":
@@ -129,9 +120,6 @@ module.exports = async function getMetaEvidence() {
         rulingOptions: {
           type: "multiple-select",
           titles: questionData.outcomes,
-          reserved: {
-            "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF": "Answered Too Soon",
-          },
         },
       });
     case "datetime":
@@ -139,9 +127,6 @@ module.exports = async function getMetaEvidence() {
         ...erc1497OverridesMixin,
         rulingOptions: {
           type: "datetime",
-          reserved: {
-            "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF": "Answered Too Soon",
-          },
         },
       });
     default:

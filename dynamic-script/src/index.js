@@ -20,6 +20,7 @@ const REALITY_STARTS_AT = {
   "0xeAD0ca922390a5E383A9D5Ba4366F7cfdc6f0dbA": 14341474, // Reality 3.0 OptimismSepolia
   "0xc716c23D75f523eF0C511456528F2A1980256a87": 3034954, // Reality 3.0 Redstone
   "0x1E732a1C5e9181622DD5A931Ec6801889ce66185": 10438389, // Realitiy 3.0 Chiado
+  "0xC68755Ba891A31b969764eB46C0bC7A5127A0854": 12569806, // Reality 2.1 Chiado
 };
 
 module.exports = async function getMetaEvidence() {

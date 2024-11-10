@@ -35,12 +35,8 @@ async function main() {
   console.log("Starting foreign proxy deployment..");
   const chainId = hre.network.config.chainId;
   const { arbitrator, arbitratorExtraData, zkAddress, metaEvidence } = paramsByChainId[chainId];
-  let governor;
-  if (chainId === 1) {
-    governor = "TODO"; // Determine later
-  } else {
-    governor = (await ethers.getSigners())[0].address;
-  }
+  // Initially have the deployer as governor, and change it later
+  const governor = (await ethers.getSigners())[0].address;
 
   const ForeignProxy = await ethers.getContractFactory("zkRealitioForeignProxy");
   const foreignProxy = await ForeignProxy.deploy(
